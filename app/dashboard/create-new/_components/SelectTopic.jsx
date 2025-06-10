@@ -17,7 +17,7 @@ function SelectTopic({onUserSelect}) {
   return (
     <div>
       <h2 className='font-bold text-2xl text-primary'>Content</h2>
-      <p className='text-gray-500'>What is the topic of your video</p>
+      <p className='text-black'>What is the topic of your video</p>
 
       <Select onValueChange={(value) =>{
         setselectedOptions(value)
@@ -28,7 +28,7 @@ function SelectTopic({onUserSelect}) {
         </SelectTrigger>
         <SelectContent>
           {options.map((item,index)=>(
-            <SelectItem value={item}>{item}</SelectItem>
+            <SelectItem value={item} key={index} >{item} </SelectItem>
           ))}
         </SelectContent>
       </Select>
