@@ -6,6 +6,9 @@ import SelectDuration from './_components/SelectDuration'
 import { Button } from '@/components/ui/button'
 import axios from 'axios'
 import CustomLoading from './_components/CustomLoading'
+import { v4 as uuidv4 } from 'uuid';
+
+const scriptData = "Once upon a time, in a city filled with quirky inventions, lived a girl named Lily and her robot dog, Sparky.."
 
 function CreateNew() {
 
@@ -24,7 +27,8 @@ function CreateNew() {
   }
 
   const onCreateClickHandler=()=>{
-    GetVideoScript();
+    // GetVideoScript();
+    GenerateAudioFile(scriptData);
   }
 
   //Get Video Script
@@ -37,19 +41,29 @@ function CreateNew() {
       prompt : prompt
     }).then(resp=>{
       console.log(resp.data);
-      setVideoScript(resp.data.result)
+      setVideoScript(resp.data.result);
+      GenerateAudioFile(resp.data.result);
     });
     setLoading(false)
   }
 
   // create audio file
-  const GenerateAudioFile=async()=>{
+  const GenerateAudioFile=async(videoScriptData)=>{
+    setLoading(true)
     let script = '';
-    videoScript.forEach(item=>{
-      script = script+item.ContentText+' ';
-    })
+    const id = uuidv4();
+    // videoScriptData.forEach(item=>{
+    //   script = script+item.contentText+' ';
+    // })
 
-    console.log(script);
+    await axios.post('/api/generate-audio',{
+      text:videoScriptData,
+      id:id
+    }).then(resp=>{
+      console.log(resp.data);
+      
+    })
+    setLoading(false)
   }
   
 

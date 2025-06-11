@@ -1,7 +1,9 @@
 import textToSpeech from "@google-cloud/text-to-speech"
 import { NextResponse } from "next/server";
 import { Result } from "postcss";
-
+// Import other required libraries
+const fs = require('fs');
+const util = require('util');
 
 const client = new textToSpeech.TextToSpeechClient({
     apiKey:process.env.NEXT_GOOGLE_AUDIO_API_KEY
