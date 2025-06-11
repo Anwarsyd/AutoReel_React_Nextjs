@@ -5,11 +5,15 @@ import SelectStyle from './_components/SelectStyle'
 import SelectDuration from './_components/SelectDuration'
 import { Button } from '@/components/ui/button'
 import axios from 'axios'
+import CustomLoading from './_components/CustomLoading'
 
 function CreateNew() {
 
 
   const [formData,setFormData] = useState([])
+  const [loading,setLoading] = useState(false);
+  const [videoScript,setVideoScript] = useState();
+
   const onHandleInputChange=(fieldName,fieldValue)=>{
     console.log(fieldName,fieldValue)
 
@@ -26,13 +30,26 @@ function CreateNew() {
   //Get Video Script
 
   const GetVideoScript =async()=>{
+    setLoading(true)
     const prompt = 'write a script to generate '+formData.duration+' video on topic : '+formData.topic+' along with AI image prompt in '+formData.imageStyle+' format for each scene and give me result in JSON format with imagePrompt and contentText as field,No Plain text'
     console.log(prompt)
     const result =await axios.post('/api/get-video-script',{
       prompt : prompt
     }).then(resp=>{
       console.log(resp.data);
+      setVideoScript(resp.data.result)
+    });
+    setLoading(false)
+  }
+
+  // create audio file
+  const GenerateAudioFile=async()=>{
+    let script = '';
+    videoScript.forEach(item=>{
+      script = script+item.ContentText+' ';
     })
+
+    console.log(script);
   }
   
 
@@ -55,6 +72,8 @@ function CreateNew() {
 
 
       </div>
+
+      <CustomLoading loading={loading} />
 
     </div>
   )
