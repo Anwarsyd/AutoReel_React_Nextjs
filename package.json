@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@clerk/nextjs": "^6.20.2",
+    "@google/genai": "^1.4.0",
     "@neondatabase/serverless": "^1.0.0",
     "@radix-ui/react-select": "^2.2.5",
     "@radix-ui/react-slot": "^1.2.3",
@@ -20,6 +21,7 @@
     "dotenv": "^16.5.0",
     "drizzle-orm": "^0.44.1",
     "lucide-react": "^0.511.0",
+    "mime": "^4.0.7",
     "next": "15.3.3",
     "postcss": "^8.5.4",
     "react": "^19.0.0",
