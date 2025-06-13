@@ -9,13 +9,15 @@ import CustomLoading from './_components/CustomLoading'
 import { v4 as uuidv4 } from 'uuid';
 
 const scriptData = "Once upon a time, in a city filled with quirky inventions, lived a girl named Lily and her robot dog, Sparky.."
-
+const FILEURL = 'https://firebasestorage.googleapis.com/v0/b/autoreel-aivideogenerator.firebasestorage.app/o/autoreel-ai-short-video-files%2F30ab1558-5be3-443f-8372-2cdfcee0c3b1.mp3?alt=media&token=8cbfe31b-da89-4517-a652-a251fe2c63c8'
 function CreateNew() {
 
 
   const [formData,setFormData] = useState([])
   const [loading,setLoading] = useState(false);
   const [videoScript,setVideoScript] = useState();
+  const [audioFileUrl,setAudioFileUrl] = useState();
+  const [caption,setcaptions]=useState();
 
   const onHandleInputChange=(fieldName,fieldValue)=>{
     console.log(fieldName,fieldValue)
@@ -28,7 +30,8 @@ function CreateNew() {
 
   const onCreateClickHandler=()=>{
     // GetVideoScript();
-    GenerateAudioFile(scriptData);
+    // GenerateAudioFile(scriptData);
+    GenerateAudioCaption(FILEURL)
   }
 
   //Get Video Script
@@ -60,7 +63,20 @@ function CreateNew() {
       text:videoScriptData,
       id:id
     }).then(resp=>{
-      console.log(resp.data);
+      // console.log(resp.data);
+      setAudioFileUrl(resp.data.result)
+    })
+    setLoading(false)
+  }
+
+  const GenerateAudioCaption=async(fileUrl)=>{
+    setLoading(true)
+
+    await axios.post('/api/generate-caption',{
+      audioFileUrl:fileUrl
+    }).then(resp=>{
+      console.log(resp.data.result);
+      setcaptions(resp?.data?.result)
       
     })
     setLoading(false)

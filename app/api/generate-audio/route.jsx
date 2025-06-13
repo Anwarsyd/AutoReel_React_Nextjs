@@ -1,4 +1,6 @@
+import { storage } from "@/configs/FirebaseConfig";
 import textToSpeech from "@google-cloud/text-to-speech"
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { NextResponse } from "next/server";
 import { Result } from "postcss";
 // Import other required libraries
@@ -11,6 +13,9 @@ const client = new textToSpeech.TextToSpeechClient({
 
 export async function POST(req) {
     const {text,id} = await req.json();
+    const storageRef = ref(storage,'autoreel-ai-short-video-files/'+id+'.mp3')
+
+
 
 //request    
     const request = {
@@ -26,9 +31,15 @@ export async function POST(req) {
   // Performs the text-to-speech request
   const [response] = await client.synthesizeSpeech(request);
   // Write the binary audio content to a local file
-  const writeFile = util.promisify(fs.writeFile);
-  await writeFile('output.mp3', response.audioContent, 'binary');
-  console.log('Audio content written to file: output.mp3');
+  // const writeFile = util.promisify(fs.writeFile);
+  // await writeFile('output.mp3', response.audioContent, 'binary');
 
-  return NextResponse.json({Result:"Success"});
+  const audioBuffer = Buffer.from(response.audioContent,'binary');
+  await uploadBytes(storageRef,audioBuffer,{contentType:'audio/mp3'})
+
+  const downloadUrl = await getDownloadURL(storageRef)
+
+  console.log(downloadUrl);
+
+  return NextResponse.json({Result:downloadUrl});
 }
