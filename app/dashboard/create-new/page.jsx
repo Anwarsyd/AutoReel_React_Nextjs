@@ -10,6 +10,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 const scriptData = "Once upon a time, in a city filled with quirky inventions, lived a girl named Lily and her robot dog, Sparky.."
 const FILEURL = 'https://firebasestorage.googleapis.com/v0/b/autoreel-aivideogenerator.firebasestorage.app/o/autoreel-ai-short-video-files%2F30ab1558-5be3-443f-8372-2cdfcee0c3b1.mp3?alt=media&token=8cbfe31b-da89-4517-a652-a251fe2c63c8'
+
 function CreateNew() {
 
 
@@ -18,6 +19,7 @@ function CreateNew() {
   const [videoScript,setVideoScript] = useState();
   const [audioFileUrl,setAudioFileUrl] = useState();
   const [caption,setcaptions]=useState();
+  const [imagesUrl,setimagesUrl]=useState();
 
   const onHandleInputChange=(fieldName,fieldValue)=>{
     console.log(fieldName,fieldValue)
@@ -74,6 +76,19 @@ function CreateNew() {
 
     await axios.post('/api/generate-caption',{
       audioFileUrl:fileUrl
+    }).then(resp=>{
+      console.log(resp.data.result);
+      setcaptions(resp?.data?.result)
+      
+    })
+    setLoading(false)
+  }
+
+  const GenerateImages=async(imageUrl)=>{
+    setLoading(true)
+
+    await axios.post('/api/generate-images',{
+      imagesUrl:i
     }).then(resp=>{
       console.log(resp.data.result);
       setcaptions(resp?.data?.result)
