@@ -10,16 +10,25 @@ import { v4 as uuidv4 } from 'uuid';
 
 const scriptData = "Once upon a time, in a city filled with quirky inventions, lived a girl named Lily and her robot dog, Sparky.."
 const FILEURL = 'https://firebasestorage.googleapis.com/v0/b/autoreel-aivideogenerator.firebasestorage.app/o/autoreel-ai-short-video-files%2F30ab1558-5be3-443f-8372-2cdfcee0c3b1.mp3?alt=media&token=8cbfe31b-da89-4517-a652-a251fe2c63c8'
+const videoSCRIPT=[
+  {
+    "imagePrompt": "Realistic depiction of a shadowy figure delivering a sealed letter in a dark alleyway, late at night, mysterious atmosphere, moonlit sky",
+    "contentText": "One night, a mysterious figure delivers a sealed letter to Giovanni's master, a message that changes everything. It's a coded warning about a plot against the Medici family..."
+  },
+  {
+    "imagePrompt": "Realistic image of Giovanni deciphering a coded message, candlelight illuminating his face, intense focus, parchment covered in complex symbols",
+    "contentText": "Giovanni, despite his youth, possesses a talent for codes. He deciphers the message, revealing a conspiracy far greater than he could have imagined..."
+  },
+]
+
 
 function CreateNew() {
-
-
   const [formData,setFormData] = useState([])
   const [loading,setLoading] = useState(false);
   const [videoScript,setVideoScript] = useState();
   const [audioFileUrl,setAudioFileUrl] = useState();
-  const [caption,setcaptions]=useState();
-  const [imagesUrl,setimagesUrl]=useState();
+  const [captions,setcaptions]=useState();
+  const [imageList,setImageList] = useState();
 
   const onHandleInputChange=(fieldName,fieldValue)=>{
     console.log(fieldName,fieldValue)
@@ -31,9 +40,10 @@ function CreateNew() {
   }
 
   const onCreateClickHandler=()=>{
-    // GetVideoScript();
+    GetVideoScript();
     // GenerateAudioFile(scriptData);
-    GenerateAudioCaption(FILEURL)
+    // GenerateAudioCaption(FILEURL)
+    // GenerateImage();
   }
 
   //Get Video Script
@@ -44,34 +54,44 @@ function CreateNew() {
     console.log(prompt)
     const result =await axios.post('/api/get-video-script',{
       prompt : prompt
-    }).then(resp=>{
-      console.log(resp.data);
-      setVideoScript(resp.data.result);
-      GenerateAudioFile(resp.data.result);
-    });
-    setLoading(false)
+    })
+    // .then(resp=>{
+    //   console.log(resp.data);
+    //   setVideoScript(resp.data.result);
+    //   GenerateAudioFile(resp.data.result);
+    // });
+    // setLoading(false)
+
+    if(resp.data.result){
+      console.log(resp.data.result);
+      setVideoScript(resp.data.result)
+      await GenerateAudioFile(resp.data.result)
+      
+    }
   }
 
   // create audio file
+  //Generate audio file and save to firebase
   const GenerateAudioFile=async(videoScriptData)=>{
     setLoading(true)
     let script = '';
     const id = uuidv4();
-    // videoScriptData.forEach(item=>{
-    //   script = script+item.contentText+' ';
-    // })
-
-    await axios.post('/api/generate-audio',{
-      text:videoScriptData,
-      id:id
-    }).then(resp=>{
-      // console.log(resp.data);
-      setAudioFileUrl(resp.data.result)
+    videoScriptData.forEach(item=>{
+      script = script+item.contentText+' ';
     })
+
+    const resp = await axios.post('/api/generate-audio',{
+      text:script,
+      id:id
+    })
+      // console.log(resp.data);
+      setAudioFileUrl(resp.data.result);//get File URL
+      resp.data.result && await GenerateAudioCaption(resp.data.result,videoScriptData)
     setLoading(false)
   }
 
-  const GenerateAudioCaption=async(fileUrl)=>{
+  // Generate captions from audio file
+  const GenerateAudioCaption=async(fileUrl,videoScriptData)=>{
     setLoading(true)
 
     await axios.post('/api/generate-caption',{
@@ -79,21 +99,45 @@ function CreateNew() {
     }).then(resp=>{
       console.log(resp.data.result);
       setcaptions(resp?.data?.result)
-      
+      resp.data.result&&GenerateImage(videoScriptData);
     })
     setLoading(false)
   }
 
-  const GenerateImages=async(imageUrl)=>{
+  // Geneate AI images
+  const GenerateImage=async(videoScriptData)=>{
     setLoading(true)
 
-    await axios.post('/api/generate-images',{
-      imagesUrl:i
-    }).then(resp=>{
-      console.log(resp.data.result);
-      setcaptions(resp?.data?.result)
-      
-    })
+
+    let images=[]
+    // videoScript.forEach(async(element) => {
+    // videoSCRIPT.forEach(async(element) => {
+    // await videoScriptData.forEach(async(element) => {
+    //   await axios.post('/api/generate-image',{
+    //     prompt:element?.imagePrompt
+    // }).then(resp=>{
+    //   console.log(resp.data.result);
+    //   images.push(resp.data.result)
+    // })
+  // })
+
+    for(const element of videoScriptData)
+    {
+      try {
+        const resp = await axios.post('/api/generate-image',{
+          prompt : element.imagePrompt
+        })
+        console.log(resp.data.result);
+        images.push(resp.data.result);
+        
+      } catch (e) {
+        console.log("Error:"+e);        
+      }
+    }
+    console.log(images);
+    console.log(images,videoScript,audioFileUrl,captions);
+    
+    setImageList(images)
     setLoading(false)
   }
   
