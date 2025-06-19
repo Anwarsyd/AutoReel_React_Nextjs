@@ -1,5 +1,5 @@
 "use client"
-import React, { useState } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import SelectTopic from './_components/SelectTopic'
 import SelectStyle from './_components/SelectStyle'
 import SelectDuration from './_components/SelectDuration'
@@ -7,19 +7,22 @@ import { Button } from '@/components/ui/button'
 import axios from 'axios'
 import CustomLoading from './_components/CustomLoading'
 import { v4 as uuidv4 } from 'uuid';
+import { VideoDataContext } from '@/app/_context/VideoDataContext'
 
-const scriptData = "Once upon a time, in a city filled with quirky inventions, lived a girl named Lily and her robot dog, Sparky.."
-const FILEURL = 'https://firebasestorage.googleapis.com/v0/b/autoreel-aivideogenerator.firebasestorage.app/o/autoreel-ai-short-video-files%2F30ab1558-5be3-443f-8372-2cdfcee0c3b1.mp3?alt=media&token=8cbfe31b-da89-4517-a652-a251fe2c63c8'
-const videoSCRIPT=[
-  {
-    "imagePrompt": "Realistic depiction of a shadowy figure delivering a sealed letter in a dark alleyway, late at night, mysterious atmosphere, moonlit sky",
-    "contentText": "One night, a mysterious figure delivers a sealed letter to Giovanni's master, a message that changes everything. It's a coded warning about a plot against the Medici family..."
-  },
-  {
-    "imagePrompt": "Realistic image of Giovanni deciphering a coded message, candlelight illuminating his face, intense focus, parchment covered in complex symbols",
-    "contentText": "Giovanni, despite his youth, possesses a talent for codes. He deciphers the message, revealing a conspiracy far greater than he could have imagined..."
-  },
-]
+// const scriptData = "Once upon a time, in a city filled with quirky inventions, lived a girl named Lily and her robot dog, Sparky.."
+// const FILEURL = 'https://firebasestorage.googleapis.com/v0/b/autoreel-aivideogenerator.firebasestorage.app/o/autoreel-ai-short-video-files%2F30ab1558-5be3-443f-8372-2cdfcee0c3b1.mp3?alt=media&token=8cbfe31b-da89-4517-a652-a251fe2c63c8'
+// const videoSCRIPT=[
+//   {
+//     "imagePrompt": "Realistic depiction of a shadowy figure delivering a sealed letter in a dark alleyway, late at night, mysterious atmosphere, moonlit sky",
+//     "contentText": "One night, a mysterious figure delivers a sealed letter to Giovanni's master, a message that changes everything. It's a coded warning about a plot against the Medici family..."
+//   },
+//   {
+//     "imagePrompt": "Realistic image of Giovanni deciphering a coded message, candlelight illuminating his face, intense focus, parchment covered in complex symbols",
+//     "contentText": "Giovanni, despite his youth, possesses a talent for codes. He deciphers the message, revealing a conspiracy far greater than he could have imagined..."
+//   },
+// ]
+
+
 
 
 function CreateNew() {
@@ -29,6 +32,8 @@ function CreateNew() {
   const [audioFileUrl,setAudioFileUrl] = useState();
   const [captions,setcaptions]=useState();
   const [imageList,setImageList] = useState();
+
+  const {videoData,setVideoData} = useContext(VideoDataContext)
 
   const onHandleInputChange=(fieldName,fieldValue)=>{
     console.log(fieldName,fieldValue)
@@ -63,9 +68,14 @@ function CreateNew() {
     // setLoading(false)
 
     if(resp.data.result){
-      console.log(resp.data.result);
+      // console.log(resp.data.result);
+      setVideoData(prev=>({
+        ...prev,
+        'videoScript': resp.data.result
+      }))
       setVideoScript(resp.data.result)
       await GenerateAudioFile(resp.data.result)
+
       
     }
   }
@@ -84,6 +94,11 @@ function CreateNew() {
       text:script,
       id:id
     })
+
+    setVideoData(prev=>({
+        ...prev,
+        'audioFileUrl': resp.data.result
+      }))
       // console.log(resp.data);
       setAudioFileUrl(resp.data.result);//get File URL
       resp.data.result && await GenerateAudioCaption(resp.data.result,videoScriptData)
@@ -97,7 +112,10 @@ function CreateNew() {
     await axios.post('/api/generate-caption',{
       audioFileUrl:fileUrl
     }).then(resp=>{
-      console.log(resp.data.result);
+      setVideoData(prev=>({
+        ...prev,
+        'captions': resp.data.result
+      }))
       setcaptions(resp?.data?.result)
       resp.data.result&&GenerateImage(videoScriptData);
     })
@@ -137,9 +155,18 @@ function CreateNew() {
     console.log(images);
     console.log(images,videoScript,audioFileUrl,captions);
     
+    setVideoData(prev=>({
+        ...prev,
+        'imageList': images
+      }))
+
     setImageList(images)
     setLoading(false)
   }
+
+  useEffect(()=>{
+    console.log(videoData);
+  },[videoData])
   
 
   return (
