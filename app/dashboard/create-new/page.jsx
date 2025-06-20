@@ -8,6 +8,8 @@ import axios from 'axios'
 import CustomLoading from './_components/CustomLoading'
 import { v4 as uuidv4 } from 'uuid';
 import { VideoDataContext } from '@/app/_context/VideoDataContext'
+import { useUser } from '@clerk/nextjs'
+import PlayerDialog from '../_components/PlayerDialog'
 
 // const scriptData = "Once upon a time, in a city filled with quirky inventions, lived a girl named Lily and her robot dog, Sparky.."
 // const FILEURL = 'https://firebasestorage.googleapis.com/v0/b/autoreel-aivideogenerator.firebasestorage.app/o/autoreel-ai-short-video-files%2F30ab1558-5be3-443f-8372-2cdfcee0c3b1.mp3?alt=media&token=8cbfe31b-da89-4517-a652-a251fe2c63c8'
@@ -35,6 +37,10 @@ function CreateNew() {
 
   const {videoData,setVideoData} = useContext(VideoDataContext)
 
+  const {user}=useUser(); //user from the clerk
+
+  const [playVideo,setPlayVideo] = useState(false)
+  const [videoId,setVideoId] = useState()
   const onHandleInputChange=(fieldName,fieldValue)=>{
     console.log(fieldName,fieldValue)
 
@@ -166,8 +172,32 @@ function CreateNew() {
 
   useEffect(()=>{
     console.log(videoData);
+    if(Object.keys(videoData).length==4) // check video,audio,captions,image
+    {
+      SaveVideoData(videoData);
+    }
   },[videoData])
   
+
+  const SaveVideoData=async(videoData)=>{
+    setLoading(true)
+
+    const result = await db.insert(videoData).values({
+      script:videoData?.videoScript,
+      audioFileUrl:videoData?.audioFileUrl,
+      captions:videoData?.captions,
+      imageList:videoData?.imageList,
+      createdBy:user?.primaryEmailAddress?.emailAddress
+
+    }).returning({id:videoData?.id})
+
+    setVideoId(result[0].id);
+    setPlayVideo(true)
+
+    console.log(result);
+    setLoading(false)
+    
+  }
 
   return (
     <div className='md:px-20'>
@@ -190,6 +220,8 @@ function CreateNew() {
       </div>
 
       <CustomLoading loading={loading} />
+
+      <PlayerDialog playVideo={playVideo} videoId={videoId} />
 
     </div>
   )

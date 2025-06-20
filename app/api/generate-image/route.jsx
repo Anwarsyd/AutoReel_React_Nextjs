@@ -1,4 +1,4 @@
-// make sure install replicate
+// make sure npm install replicate
 import { storage } from "@/configs/FirebaseConfig";
 import { auth } from "@clerk/nextjs/dist/types/server"
 import axios from "axios";
