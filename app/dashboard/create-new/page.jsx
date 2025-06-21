@@ -10,6 +10,11 @@ import { v4 as uuidv4 } from 'uuid';
 import { VideoDataContext } from '@/app/_context/VideoDataContext'
 import { useUser } from '@clerk/nextjs'
 import PlayerDialog from '../_components/PlayerDialog'
+import { db } from '@/configs/db'
+import { UserDetailContext } from '@/app/_context/UserDetailContext'
+import { toast } from 'sonner'
+import { Users } from '@/configs/schema'
+import { eq } from 'drizzle-orm'
 
 // const scriptData = "Once upon a time, in a city filled with quirky inventions, lived a girl named Lily and her robot dog, Sparky.."
 // const FILEURL = 'https://firebasestorage.googleapis.com/v0/b/autoreel-aivideogenerator.firebasestorage.app/o/autoreel-ai-short-video-files%2F30ab1558-5be3-443f-8372-2cdfcee0c3b1.mp3?alt=media&token=8cbfe31b-da89-4517-a652-a251fe2c63c8'
@@ -41,6 +46,9 @@ function CreateNew() {
 
   const [playVideo,setPlayVideo] = useState(false)
   const [videoId,setVideoId] = useState()
+
+  const {userDetail,setUserDetail} = useContext(UserDetailContext)
+
   const onHandleInputChange=(fieldName,fieldValue)=>{
     console.log(fieldName,fieldValue)
 
@@ -51,6 +59,12 @@ function CreateNew() {
   }
 
   const onCreateClickHandler=()=>{
+    if(!userDetail?.credit>=0)
+    {
+      toast("You don't have enough credits")
+      return ;
+    }
+
     GetVideoScript();
     // GenerateAudioFile(scriptData);
     // GenerateAudioCaption(FILEURL)
@@ -190,13 +204,25 @@ function CreateNew() {
       createdBy:user?.primaryEmailAddress?.emailAddress
 
     }).returning({id:videoData?.id})
-
+    await UpdateUserCredits()
     setVideoId(result[0].id);
     setPlayVideo(true)
 
     console.log(result);
     setLoading(false)
     
+  }
+
+  const UpdateUserCredits=async()=>{
+    const result =await  db.update(Users).set({
+      credits:userDetail?.credit-10
+    }).where(eq(Users?.email,user?.primaryEmailAddress?.emailAddress));
+    console.log(result);
+    setUserDetail(prev=>({
+      ...prev,
+      "credits":userDetail?.credits-10
+    }))
+    setVideoData(null)
   }
 
   return (
