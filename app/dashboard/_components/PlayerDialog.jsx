@@ -18,6 +18,8 @@ function PlayerDialog({playVideo,videoId}) {
 
     const [openDialog,setopenDialog]=useState(false)
     const [videoData,setVideoData]=useState()
+    const [durationInFrame,setDurationInFrame]=useState()
+
     useEffect(()=>{
         setopenDialog(playVideo)
         videoId&&GetVideoData();
@@ -40,13 +42,19 @@ function PlayerDialog({playVideo,videoId}) {
             <DialogDescription>
                 <Player
                     component={RemotionVideo}
-                    durationInFrames={120}
+                    durationInFrames={Number(durationInFrame.toFixed(0))}
                     compositionWidth={300}
                     compositionHeight={450}
                     fps={30}
+
+                    controls={true}
+                    inputProps={{
+                        ...videoData,
+                        setDurationInFrame:(frameValue)=>setDurationInFrame(frameValue)
+                    }}
                 />
 
-                <div className='flex gap-10'>
+                <div className='flex gap-10 mt-10'>
                     <Button varient="ghost">Cancel</Button>
                     <Button>Export</Button>
                 </div>
